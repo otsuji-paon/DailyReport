@@ -1,0 +1,23 @@
+# Copyright (c) Masato Urai, Tomoya Otake, Hirokuni Kim
+# Released under the MIT license
+# https://opensource.org/licenses/mit-license.php
+
+version: 2.1
+orbs:
+  aws-ecr: circleci/aws-ecr@6.10.0
+  aws-ecs: circleci/aws-ecs@1.2.0
+workflows:
+  build-and-deploy:
+    jobs:
+      - aws-ecr/build-and-push-image:
+          account-url: AWS_ECR_ACCOUNT_URL
+          repo: 'nippo/rails-api'
+          tag: 'latest'
+
+      - aws-ecs/deploy-service-update:
+          requires:
+            - aws-ecr/build-and-push-image
+          family: 'console-sample-app-static'
+          service-name: 'NIppo-Api-ECS-Service'
+          cluster-name: 'Nippo-Api-ECS-EC2'
+          container-image-name-updates: 'container=simple-app,image-and-tag=${AWS_ECR_ACCOUNT_URL}/nippo/rails-api:latest'
